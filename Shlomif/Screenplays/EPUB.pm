@@ -29,6 +29,7 @@ has script_dir =>
 
 has [ 'target_dir', ] => ( is => 'rw' );
 has 'images' => ( is => 'ro', isa => 'HashRef[Str]', default => sub { +{}; }, );
+has 'should_minify' => ( is => 'ro', default => 1 );
 
 has 'common_json_data' => (
     isa       => 'HashRef',
@@ -132,7 +133,10 @@ sub run
 
     $self->filename($filename);
 
-    my $target_dir = Path::Tiny->tempdir;
+    my $target_dir =
+        $self->target_dir
+        ? path( $self->target_dir )
+        : scalar( Path::Tiny->tempdir() );
     $self->target_dir($target_dir);
 
     # Prepare the objects.
@@ -208,6 +212,7 @@ EOF
             }
         );
     }
+    if ( $self->should_minify() )
     {
         local $ENV{APPLY_TEXTS} = "1";
         App::Gezer->new()->run(
