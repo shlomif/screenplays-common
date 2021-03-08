@@ -143,12 +143,22 @@ sub run
     my $xml       = XML::LibXML->new;
     my $root_node = $xml->parse_file($filename);
     my @scene_bns;
+    my $images = +{};
     {
-        my $scenes_list =
-            _get_xpc($root_node)
-            ->findnodes(
+        my $xpc = _get_xpc($root_node);
+
+        foreach my $img ( $xpc->findnodes(q{//xhtml:img/@src}) )
+        {
+            my $url = $img->textContent();
+            $url =~ s#\A(?:\./)?images/##
+                or die "wrong prefix img src=<$url>";
+            $images->{$url} = "images/$url";
+
+        }
+
+        my $scenes_list = $xpc->findnodes(
 q{//xhtml:main[@class='screenplay']/xhtml:section[@class='scene']/xhtml:section[@class='scene' and xhtml:header/xhtml:h2]}
-            ) or die "Cannot find top-level scenes list.";
+        ) or die "Cannot find top-level scenes list.";
 
         my $idx = 0;
         $scenes_list->foreach(
@@ -226,6 +236,7 @@ EOF
                 ]
             }
         );
+
     }
 
     my $gfx = 'Green-d10-dice.png';
@@ -234,13 +245,14 @@ EOF
     my $script_dir = $self->script_dir;
     copy( "$script_dir/../graphics/$gfx", "$target_dir/images/$gfx" );
 
-    my $images = $self->images;
+    $images = +{ %$images, %{ $self->images() } };
     foreach my $img_src ( keys(%$images) )
     {
         my $dest = "$target_dir/$images->{$img_src}";
 
         path($dest)->parent->mkpath;
         copy( "$script_dir/../graphics/$img_src", $dest );
+
     }
 
     foreach my $basename ('style.css')
