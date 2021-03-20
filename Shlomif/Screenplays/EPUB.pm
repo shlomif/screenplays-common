@@ -39,7 +39,7 @@ has 'common_json_data' => (
             contents => [
                 {
                     "type"   => "toc",
-                    "source" => "toc.html"
+                    "source" => "toc.xhtml",
                 },
                 {
                     type   => 'text',
@@ -57,7 +57,7 @@ has 'common_json_data' => (
                 {
                     type  => "toc",
                     title => "Index",
-                    href  => "toc.html",
+                    href  => "toc.xhtml",
                 },
             ],
         };
@@ -207,7 +207,7 @@ q# xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"#;
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
 <head>
 <title>$esc_title</title>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8"/>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
