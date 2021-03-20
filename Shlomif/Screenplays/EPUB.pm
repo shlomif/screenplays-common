@@ -203,9 +203,7 @@ q# xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"#;
                     push @scene_bns, $scene_bn;
                     path( $target_dir . "/$scene_bn" )->spew_utf8(<<"EOF");
 <?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE
-    html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
-    "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
 <head>
 <title>$esc_title</title>
