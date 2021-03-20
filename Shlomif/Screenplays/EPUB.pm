@@ -258,7 +258,6 @@ EOF
         path("$target_dir/$basename")->spew_utf8(<<'EOF');
 body
 {
-    direction: ltr;
     text-align: left;
     font-family: sans-serif;
     background-color: white;
