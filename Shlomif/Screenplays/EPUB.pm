@@ -161,14 +161,25 @@ q{//xhtml:main[@class='screenplay']/xhtml:section[@class='scene']/xhtml:section[
         ) or die "Cannot find top-level scenes list.";
 
         my $idx = 0;
+        my %ids;
+        my %scenes;
         $scenes_list->foreach(
             sub {
                 my ($orig_scene) = @_;
 
                 my $scene = $orig_scene->cloneNode(1);
+                my $scene_bn =
+                    "scene-" . sprintf( "%.4d", ( $idx + 1 ) ) . ".xhtml";
 
                 {
                     my $scene_xpc = _get_xpc($scene);
+                    $scene_xpc->findnodes(q{descendant::*/@id})->foreach(
+                        sub {
+                            my ($id) = @_;
+                            $ids{ $id->nodeValue() } = $scene_bn;
+                            return;
+                        }
+                    );
                     foreach my $h_idx ( 2 .. 6 )
                     {
                         foreach my $h_tag (
@@ -187,21 +198,42 @@ q{//xhtml:main[@class='screenplay']/xhtml:section[@class='scene']/xhtml:section[
 
                 {
                     my $scene_xpc = _get_xpc($scene);
-
-                    my $title =
-                        $scene_xpc->findnodes('descendant::xhtml:h1')->[0]
-                        ->textContent();
-                    my $esc_title = escape_html($title);
-
-                    my $scene_string = $scene->toString();
-                    my $xmlns =
-q# xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"#;
-                    $scene_string =~ s{(<\w+)\Q$xmlns\E( )}{$1$2}g;
-
-                    my $scene_bn =
-                        "scene-" . sprintf( "%.4d", ( $idx + 1 ) ) . ".xhtml";
+                    $scenes{$scene_bn} = [ $scene, $scene_xpc ];
                     push @scene_bns, $scene_bn;
-                    path( $target_dir . "/$scene_bn" )->spew_utf8(<<"EOF");
+                }
+                ++$idx;
+            }
+        );
+
+        foreach my $scene_bn (@scene_bns)
+        {
+            my ( $scene, $scene_xpc ) = @{ $scenes{$scene_bn} };
+
+            # Fix anchorlinks
+            $scene_xpc->findnodes(q{descendant::*[starts-with(@href,'#')]})
+                ->foreach(
+                sub {
+                    my ($elem) = @_;
+                    my $link   = $elem->getAttribute("href");
+                    my $id     = substr( $link, 1 );
+                    my $doc    = $ids{$id};
+                    if ( $doc ne $scene_bn )
+                    {
+                        $elem->setAttribute( "href", "$doc$link" );
+                    }
+                    return;
+                }
+                );
+
+            my $title =
+                $scene_xpc->findnodes('descendant::xhtml:h1')->[0]
+                ->textContent();
+            my $esc_title    = escape_html($title);
+            my $scene_string = $scene->toString();
+            my $xmlns =
+                q# xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"#;
+            $scene_string =~ s{(<\w+)\Q$xmlns\E( )}{$1$2}g;
+            path( $target_dir . "/$scene_bn" )->spew_utf8(<<"EOF");
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en-US">
@@ -215,10 +247,7 @@ $scene_string
 </body>
 </html>
 EOF
-                }
-                ++$idx;
-            }
-        );
+        }
     }
     if ( $self->should_minify() )
     {
