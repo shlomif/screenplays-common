@@ -276,6 +276,7 @@ EOF
     {
         # say("full_gfx=$full_gfx");
         my $dest_gfx = path("$target_dir/images/$gfx");
+
         # say("dest_gfx=$dest_gfx");
         $dest_gfx->parent()->mkpath();
         $full_gfx->copy($dest_gfx);
