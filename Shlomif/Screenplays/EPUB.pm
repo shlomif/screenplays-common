@@ -2,6 +2,7 @@ package Shlomif::Screenplays::EPUB;
 
 use strict;
 use warnings;
+use 5.014;
 
 use Carp ();
 use Path::Tiny qw/ path /;
@@ -270,7 +271,15 @@ EOF
     $self->gfx($gfx);
     path("$target_dir/images")->mkpath;
     my $script_dir = $self->script_dir;
-    copy( "$script_dir/../graphics/$gfx", "$target_dir/images/$gfx" );
+    my $full_gfx   = path("$script_dir/../graphics/$gfx");
+    if ( -e $full_gfx )
+    {
+        # say("full_gfx=$full_gfx");
+        my $dest_gfx = path("$target_dir/images/$gfx");
+        # say("dest_gfx=$dest_gfx");
+        $dest_gfx->parent()->mkpath();
+        $full_gfx->copy($dest_gfx);
+    }
 
     $images = +{ %$images, %{ $self->images() } };
     foreach my $img_src ( keys(%$images) )
@@ -317,8 +326,7 @@ sub output_json
         $target_dir->child( path($json_filename)->basename )->absolute;
 
     $json_abs->spew_utf8(
-        encode_json( { %{ $self->common_json_data() }, %$data_tree }, ),
-    );
+        encode_json( { %{ $self->common_json_data() }, %$data_tree }, ), );
 
     {
         chdir($target_dir);
