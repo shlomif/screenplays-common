@@ -1,14 +1,13 @@
 DOCS_SCREENPLAY_TEXT = $(patsubst %,%.screenplay-text.txt,$(DOCS_BASE))
 DOCS_SCREENPLAY_XML = $(patsubst %,%.screenplay-xml.xml,$(DOCS_BASE))
-DOCS_SCREENPLAY_XHTML = $(patsubst %,%.screenplay-text.xhtml,$(DOCS_BASE))
+DOCS_SCREENPLAY_XHTML = $(patsubst %,%.screenplay-output.xhtml,$(DOCS_BASE))
 DOCS_SCREENPLAY_XHTML_AS_HTML = $(patsubst %,%.final.html,$(DOCS_BASE))
-DOCS_SCREENPLAY_FO = $(patsubst %,%.screenplay-text.fo,$(DOCS_BASE))
-DOCS_SCREENPLAY_RTF = $(patsubst %,%.screenplay-text.rtf,$(DOCS_BASE))
+DOCS_SCREENPLAY_FO = $(patsubst %,%.screenplay-output.fo,$(DOCS_BASE))
+DOCS_SCREENPLAY_RTF = $(patsubst %,%.screenplay-output.rtf,$(DOCS_BASE))
 
 DOCBOOK5_XSL_STYLESHEETS_PATH := $(HOME)/Download/unpack/file/docbook/docbook-xsl-ns-snapshot
 
 HOMEPAGE := $(HOME)/Docs/homepage/homepage/trunk
-DOCBOOK5_XSL_STYLESHEETS_XHTML_PATH := $(DOCBOOK5_XSL_STYLESHEETS_PATH)/xhtml
 DOCBOOK5_XSL_STYLESHEETS_FO_PATH := $(DOCBOOK5_XSL_STYLESHEETS_PATH)/fo
 DOCBOOK5_XSL_CUSTOM_XSLT_STYLESHEET := $(HOMEPAGE)/lib/sgml/shlomif-docbook/xsl-5-stylesheets/shlomif-essays-5-xhtml-onechunk.xsl
 DOCBOOK5_XSL_CUSTOM_FO_XSLT_STYLESHEET := $(HOMEPAGE)/lib/sgml/shlomif-docbook/xsl-5-stylesheets/shlomif-essays-5-fo.xsl
@@ -31,7 +30,7 @@ $(DOCS_SCREENPLAY_XML): %.screenplay-xml.xml: %.screenplay-text.txt
 	perl -MXML::Grammar::Screenplay::App::FromProto -e 'run()' -- \
 	-o $@ $<
 
-$(DOCS_SCREENPLAY_XHTML): %.screenplay-text.xhtml: %.screenplay-xml.xml
+$(DOCS_SCREENPLAY_XHTML): %.screenplay-output.xhtml: %.screenplay-xml.xml
 	perl -MXML::Grammar::Screenplay::App::ToHTML -e 'run()' -- \
 		-o $@ $<
 	perl -i -lap -e 's/ +$$//' $@
@@ -40,7 +39,7 @@ $(DOCS_SCREENPLAY_XHTML): %.screenplay-text.xhtml: %.screenplay-xml.xml
 $(DOCS_SCREENPLAY_XHTML_AS_HTML): $(DOCS_SCREENPLAY_XHTML)
 	cp -f $< $@
 
-$(DOCS_SCREENPLAY_FO): %.screenplay-text.fo : %.db5.xml
+$(DOCS_SCREENPLAY_FO): %.screenplay-output.fo : %.db5.xml
 	xsltproc --stringparam root.filename $@ \
 		--stringparam html.stylesheet "style.css" \
 		--path $(DOCBOOK5_XSL_STYLESHEETS_FO_PATH) \
@@ -67,8 +66,8 @@ openoffice: oohtml
 
 epub: $(ENG_EPUB)
 
-$(ENG_EPUB): $(patsubst %.epub,%.screenplay-text.xhtml,$(ENG_EPUB)) $(EPUB_SCRIPT)
-	for f in $@ ; do perl -I "$(SCREENPLAY_COMMON_INC_DIR)" $(EPUB_SCRIPT) --output "$$f" "$${f%%.epub}.screenplay-text.xhtml" || exit -1 ; done
+$(ENG_EPUB): $(patsubst %.epub,%.screenplay-output.xhtml,$(ENG_EPUB)) $(EPUB_SCRIPT)
+	for f in $@ ; do perl -I "$(SCREENPLAY_COMMON_INC_DIR)" $(EPUB_SCRIPT) --output "$$f" "$${f%%.epub}.screenplay-output.xhtml" || exit -1 ; done
 
 epub_ff: epub
 	firefox $(ENG_EPUB)
