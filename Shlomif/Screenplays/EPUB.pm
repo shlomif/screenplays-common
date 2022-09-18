@@ -4,13 +4,13 @@ use strict;
 use warnings;
 use 5.014;
 
-use Carp ();
+use Carp       ();
 use Path::Tiny qw/ path /;
 
 use utf8;
 
 use App::Gezer ();
-use MooX qw/late/;
+use MooX       qw/late/;
 
 use XML::LibXML               ();
 use XML::LibXML::XPathContext ();
@@ -74,9 +74,22 @@ import traceback
 import sys
 
 _maker = EbookMaker(compression=ZIP_DEFLATED)
+
+
+def _my_decode(s):
+    try:
+        d = s.decode('utf-8')
+        return d
+    except Exception as e:
+        if (isinstance(s, str)):
+            return s
+        # traceback.print_tb(sys.exc_info()[2])
+        raise e
+
+
 def _my_make_epub(json_filename, filename):
     try:
-        _maker.make_epub(json_filename.decode('utf-8'), filename.decode('utf-8'), )
+        _maker.make_epub(_my_decode(json_filename), _my_decode(filename), )
     except Exception as e:
         traceback.print_tb(sys.exc_info()[2])
         raise e
