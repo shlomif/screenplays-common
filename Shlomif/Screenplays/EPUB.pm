@@ -183,38 +183,32 @@ q{//xhtml:main[@class='screenplay']/xhtml:section[@class='scene']/xhtml:section[
                 my $scene_bn =
                     "scene-" . sprintf( "%.4d", ( $idx + 1 ) ) . ".xhtml";
 
+                my $scene_xpc = _get_xpc($scene);
+                $scene_xpc->findnodes(q{descendant::*/@id})->foreach(
+                    sub {
+                        my ($id) = @_;
+                        $ids{ $id->nodeValue() } = $scene_bn;
+                        return;
+                    },
+                );
+                foreach my $h_idx ( 2 .. 6 )
                 {
-                    my $scene_xpc = _get_xpc($scene);
-                    $scene_xpc->findnodes(q{descendant::*/@id})->foreach(
-                        sub {
-                            my ($id) = @_;
-                            $ids{ $id->nodeValue() } = $scene_bn;
-                            return;
-                        }
-                    );
-                    foreach my $h_idx ( 2 .. 6 )
+                    foreach my $h_tag (
+                        $scene_xpc->findnodes(qq{descendant::xhtml:h$h_idx}) )
                     {
-                        foreach my $h_tag (
-                            $scene_xpc->findnodes(
-                                qq{descendant::xhtml:h$h_idx})
-                            )
-                        {
-                            my $copy = $h_tag->cloneNode(1);
-                            $copy->setNodeName( 'h' . ( $h_idx - 1 ) );
+                        my $copy = $h_tag->cloneNode(1);
+                        $copy->setNodeName( 'h' . ( $h_idx - 1 ) );
 
-                            my $parent = $h_tag->parentNode;
-                            $parent->replaceChild( $copy, $h_tag );
-                        }
+                        my $parent = $h_tag->parentNode;
+                        $parent->replaceChild( $copy, $h_tag );
                     }
                 }
-
-                {
-                    my $scene_xpc = _get_xpc($scene);
-                    $scenes{$scene_bn} = [ $scene, $scene_xpc ];
-                    push @scene_bns, $scene_bn;
-                }
+                $scenes{$scene_bn} = [ $scene, $scene_xpc ];
+                push @scene_bns, $scene_bn;
                 ++$idx;
-            }
+
+                return;
+            },
         );
 
         foreach my $scene_bn (@scene_bns)
@@ -234,7 +228,7 @@ q{//xhtml:main[@class='screenplay']/xhtml:section[@class='scene']/xhtml:section[
                         $elem->setAttribute( "href", "$doc$link" );
                     }
                     return;
-                }
+                },
                 );
 
             my $title =
@@ -271,9 +265,9 @@ EOF
                     "--source-dir=$target_dir",
                     "--dest-dir=$target_dir",
                     "--",
-                    @scene_bns
-                ]
-            }
+                    @scene_bns,
+                ],
+            },
         );
 
     }
@@ -293,7 +287,7 @@ EOF
         $full_gfx->copy($dest_gfx);
     }
 
-    $images = +{ %$images, %{ $self->images() } };
+    $images = +{ %$images, %{ $self->images() }, };
     foreach my $img_src ( keys(%$images) )
     {
         my $dest = "$target_dir/$images->{$img_src}";
@@ -338,7 +332,7 @@ sub output_json
         $target_dir->child( path($json_filename)->basename )->absolute;
 
     $json_abs->spew_utf8(
-        encode_json( { %{ $self->common_json_data() }, %$data_tree }, ), );
+        encode_json( { %{ $self->common_json_data() }, %$data_tree, }, ), );
 
     {
         chdir($target_dir);
@@ -354,4 +348,3 @@ sub output_json
 }
 
 1;
-
