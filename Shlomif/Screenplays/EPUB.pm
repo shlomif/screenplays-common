@@ -10,27 +10,29 @@ use Path::Tiny qw/ path /;
 use utf8;
 
 use App::Gezer ();
-use MooX       qw/late/;
+use MooX       qw/ late /;
 
 use XML::LibXML               ();
 use XML::LibXML::XPathContext ();
 
 use JSON::MaybeXS qw( encode_json );
 
-use HTML::Widgets::NavMenu::EscapeHtml qw(escape_html);
+use HTML::Widgets::NavMenu::EscapeHtml qw( escape_html );
 
-use Getopt::Long qw(GetOptions);
+use Getopt::Long qw( GetOptions );
 
-use File::Copy qw(copy);
+use File::Copy qw( copy );
 
-has [ 'filename', 'gfx', 'out_fn', 'epub_basename' ] =>
-    ( is => 'rw', isa => 'Str' );
-has script_dir =>
-    ( is => 'ro', default => sub { return path($0)->parent(2)->absolute; } );
+has [ 'filename', 'gfx', 'out_fn', 'epub_basename', ] =>
+    ( is => 'rw', isa => 'Str', );
+has script_dir => (
+    is      => 'ro',
+    default => sub { return path($0)->parent(2)->absolute; },
+);
 
-has [ 'target_dir', ] => ( is => 'rw' );
+has [ 'target_dir', ] => ( is => 'rw', );
 has 'images' => ( is => 'ro', isa => 'HashRef[Str]', default => sub { +{}; }, );
-has 'should_minify' => ( is => 'ro', default => 1 );
+has 'should_minify' => ( is => 'ro', default => 1, );
 
 has 'common_json_data' => (
     isa       => 'HashRef',
@@ -70,11 +72,8 @@ eval {
     Inline->import( 'Python' => <<'EOF');
 from rebookmaker import EbookMaker
 from zipfile import ZIP_DEFLATED
-import traceback
-import sys
 
 _maker = EbookMaker(compression=ZIP_DEFLATED)
-
 
 def _my_decode(s):
     try:
@@ -86,15 +85,14 @@ def _my_decode(s):
         # traceback.print_tb(sys.exc_info()[2])
         raise e
 
-
 def _my_make_epub(json_filename, filename):
     try:
         _maker.make_epub(_my_decode(json_filename), _my_decode(filename), )
     except Exception as e:
+        import traceback
+        import sys
         traceback.print_tb(sys.exc_info()[2])
         raise e
-
-
 EOF
 };
 
