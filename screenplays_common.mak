@@ -7,6 +7,7 @@ DOCS_SCREENPLAY_RTF = $(patsubst %,%.screenplay-output.rtf,$(DOCS_BASE))
 
 DOCBOOK5_XSL_STYLESHEETS_PATH := $(HOME)/Download/unpack/file/docbook/docbook-xsl-ns-snapshot
 
+PERL ?= perl
 HOMEPAGE := $(HOME)/Docs/homepage/homepage/trunk
 DOCBOOK5_XSL_STYLESHEETS_FO_PATH := $(DOCBOOK5_XSL_STYLESHEETS_PATH)/fo
 DOCBOOK5_XSL_CUSTOM_XSLT_STYLESHEET := $(HOMEPAGE)/lib/sgml/shlomif-docbook/xsl-5-stylesheets/shlomif-essays-5-xhtml-onechunk.xsl
@@ -27,14 +28,14 @@ upload:
 	rsync -v --progress -a $(FILES) $${HOMEPAGE_SSH_PATH}/$(SELINA_UPLOAD_TEMP_DEST)/
 
 $(DOCS_SCREENPLAY_XML): %.screenplay-xml.xml: %.screenplay-text.txt
-	perl -MXML::Grammar::Screenplay::App::FromProto -e 'run()' -- \
+	$(PERL) -MXML::Grammar::Screenplay::App::FromProto -e 'run()' -- \
 	-o $@ $<
 
 $(DOCS_SCREENPLAY_XHTML): %.screenplay-output.xhtml: %.screenplay-xml.xml
-	perl -MXML::Grammar::Screenplay::App::ToHTML -e 'run()' -- \
+	$(PERL) -MXML::Grammar::Screenplay::App::ToHTML -e 'run()' -- \
 		-o $@ $<
-	perl -i -lap -e 's/ +$$//' $@
-	perl -i -0777 -lp -E 's/(\?>)/$$1\n<!DOCTYPE html>/ if not /<!DOCTYPE/' $@
+	$(PERL) -i -lp -e 's/ +$$//' $@
+	$(PERL) -i -0777 -lp -E 's/(\?>)/$$1\n<!DOCTYPE html>/ if not /<!DOCTYPE/' $@
 
 $(DOCS_SCREENPLAY_XHTML_AS_HTML): $(DOCS_SCREENPLAY_XHTML)
 	cp -f $< $@
@@ -52,10 +53,10 @@ $(DOCS_SCREENPLAY_RTF): %.rtf: %.fo
 rtf: $(DOCS_SCREENPLAY_RTF)
 
 $(ENG_HTML_FOR_OOO): $(ENG_XHTML)
-	cat $< | perl -lne 'print unless m{\A<\?xml}' > $@
+	< $< $(PERL) -lne 'print unless m{\A<\?xml}' > $@
 
 $(HEB_HTML_FOR_OOO): $(DOCS_SCREENPLAY_XHTML)
-	cat $< | perl -lne 's{(</title>)}{$${1}<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />}; print unless m{\A<\?xml}' > $@
+	< $< $(PERL) -lne 's{(</title>)}{$${1}<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />}; print unless m{\A<\?xml}' > $@
 
 oohtml: $(ENG_HTML_FOR_OOO) $(HEB_HTML_FOR_OOO)
 
@@ -67,7 +68,7 @@ openoffice: oohtml
 epub: $(ENG_EPUB)
 
 $(ENG_EPUB): $(patsubst %.epub,%.screenplay-output.xhtml,$(ENG_EPUB)) $(EPUB_SCRIPT)
-	for f in $@ ; do perl -I "$(SCREENPLAY_COMMON_INC_DIR)" $(EPUB_SCRIPT) --output "$$f" "$${f%%.epub}.screenplay-output.xhtml" || exit -1 ; done
+	for f in $@ ; do $(PERL) -I "$(SCREENPLAY_COMMON_INC_DIR)" $(EPUB_SCRIPT) --output "$$f" "$${f%%.epub}.screenplay-output.xhtml" || exit -1 ; done
 
 epub_ff: epub
 	firefox $(ENG_EPUB)
