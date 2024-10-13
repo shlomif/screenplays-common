@@ -15,7 +15,9 @@ use MooX       qw/ late /;
 use XML::LibXML               ();
 use XML::LibXML::XPathContext ();
 
-use JSON::MaybeXS qw( encode_json );
+use JSON::MaybeXS qw( );
+
+my $jsonner = JSON::MaybeXS->new( utf8 => 1 );
 
 use HTML::Widgets::NavMenu::EscapeHtml qw( escape_html );
 
@@ -331,8 +333,18 @@ sub output_json
     my $json_abs =
         $target_dir->child( path($json_filename)->basename )->absolute;
 
-    $json_abs->spew_utf8(
-        encode_json( { %{ $self->common_json_data() }, %$data_tree, }, ), );
+    my $emit_json_with_utf8 = sub {
+        my $fh = shift;
+        return $fh->spew_raw(@_);
+    };
+    $emit_json_with_utf8->(
+        $json_abs,
+        (
+            $jsonner->encode(
+                { %{ $self->common_json_data() }, %$data_tree, },
+            ),
+        )
+    );
 
     {
         chdir($target_dir);
